@@ -60,8 +60,6 @@ terraform apply -auto-approve
 terraform destroy -auto-approve
 ```
 
-## Improvement (dev branch):
-
-### dev branch:
-
-### future devlopment:
+## Improvement:
+- scale set VS does not work
+- gslb VS does not work
