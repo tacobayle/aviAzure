@@ -99,6 +99,7 @@ variable "scaleset" {
   default = {
     type = "Standard_B1s"
     userdata = "userdata/scaleset.sh"
+    name = "scaleSet"
     hostname = "backend"
     count = "2"
     offer = "UbuntuServer"
@@ -134,7 +135,7 @@ variable "ansible" {
     aviPbAbsentUrl = "https://github.com/tacobayle/ansiblePbAviAbsent"
     aviPbAbsentTag = "v1.35"
     directory = "ansible"
-    aviConfigureTag = "v2.11"
+    aviConfigureTag = "v2.12"
     aviConfigureUrl = "https://github.com/tacobayle/aviConfigure"
     opencartInstallUrl = "https://github.com/tacobayle/ansibleOpencartInstall"
     opencartInstallTag = "v1.2"

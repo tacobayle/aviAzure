@@ -207,6 +207,7 @@ serviceEngineGroup:
     buffer_se: 0
     instance_flavor: Standard_D2s_v3
     extra_shared_config_memory: 2000
+    accelerated_networking: false
     realtime_se_metrics:
       enabled: true
       duration: 0
@@ -252,7 +253,7 @@ avi_pool:
 avi_pool_group:
   - name: &pool1 pool2BasedOnAwsAutoScalingGroup
     autoscale_policy_ref: *autoscalepolicy0
-    external_autoscale_groups: ${azurerm_linux_virtual_machine_scale_set.scaleSet.id}
+    external_autoscale_groups: ${var.scaleset["name"]}@${upper(var.azure["rgName"])}
     health_monitor_refs: *hm0
     cloud_ref: *cloud0
 

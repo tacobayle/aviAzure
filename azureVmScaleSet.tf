@@ -3,7 +3,7 @@ data "template_file" "scaleSet" {
 }
 
 resource "azurerm_linux_virtual_machine_scale_set" "scaleSet" {
-  name                = "scaleSet"
+  name                = var.scaleset["name"]
   resource_group_name       = azurerm_resource_group.rg.name
   location                  = var.azure["rgLocation"]
   sku                 = var.scaleset["type"]
