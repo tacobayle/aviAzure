@@ -133,21 +133,22 @@ variable "ansible" {
     version = "2.9.12"
     prefixGroup = "azure"
     aviPbAbsentUrl = "https://github.com/tacobayle/ansiblePbAviAbsent"
-    aviPbAbsentTag = "v1.35"
+    aviPbAbsentTag = "v1.43"
     directory = "ansible"
-    aviConfigureTag = "v2.12"
+    aviConfigureTag = "v2.86"
     aviConfigureUrl = "https://github.com/tacobayle/aviConfigure"
     opencartInstallUrl = "https://github.com/tacobayle/ansibleOpencartInstall"
     opencartInstallTag = "v1.2"
+    jsonFile = "~/ansible/vars/fromTf.json"
+    yamlFile = "~/ansible/vars/fromTf.yml"
   }
 }
 
 variable "controller" {
-  type = map
   default = {
     environment = "AZURE"
-    dnsMain = "8.8.8.8"
-    ntpMain = "95.81.173.155"
+    dns =  ["8.8.8.8", "8.8.4.4"]
+    ntp = ["95.81.173.155", "188.165.236.162"]
     hostname = "controller"
     type = "Standard_DS4_v2"
     offer = "avi-vantage-adc"
@@ -156,11 +157,163 @@ variable "controller" {
     version = "20.01.01"
     aviVersion = "20.1.1"
     count = "1"
+    from_email = "avicontroller@avidemo.fr"
+    se_in_provider_context = "false"
+    tenant_access_to_provider_se = "true"
+    tenant_vrf = "false"
+    aviCredsJsonFile = "~/ansible/vars/creds.json"
   }
 }
 
 variable "avi_password" {}
 variable "avi_user" {}
+
+variable "avi_cloud" {
+  type = map
+  default = {
+    name = "cloudAzure" # don't change this name
+  }
+}
+
+variable "serviceEngineGroup" {
+  default = [
+    {
+      name = "Default-Group"
+      cloud_ref = "cloudAzure"
+      ha_mode = "HA_MODE_SHARED"
+      min_scaleout_per_vs = 1
+      buffer_se = 0
+      realtime_se_metrics = {
+        enabled = true
+        duration = 0
+      }
+    },
+    {
+      name = "seGroupCpuAutoScale"
+      cloud_ref = "cloudAzure"
+      ha_mode = "HA_MODE_SHARED"
+      min_scaleout_per_vs = 1
+      buffer_se = 1
+      auto_rebalance = true
+      auto_rebalance_interval = 30
+      auto_rebalance_criteria = [
+        "SE_AUTO_REBALANCE_CPU"
+      ]
+      realtime_se_metrics = {
+        enabled = true
+        duration = 0
+      }
+    },
+    {
+      name: "seGroupGslb"
+      cloud_ref = "cloudAzure"
+      ha_mode = "HA_MODE_SHARED"
+      min_scaleout_per_vs: 1
+      buffer_se: 0
+      instance_flavor = "Standard_D2s_v3"
+      extra_shared_config_memory = 2000
+      accelerated_networking = false
+      realtime_se_metrics = {
+        enabled: true
+        duration: 0
+      }
+    }
+  ]
+}
+
+variable "avi_pool" {
+  type = map
+  default = {
+    name = "pool1"
+    lb_algorithm = "LB_ALGORITHM_ROUND_ROBIN"
+  }
+}
+
+variable "avi_pool_group" {
+  type = map
+  default = {
+    name = "pool2BasedOnAzureScaleSet"
+    lb_algorithm = "LB_ALGORITHM_ROUND_ROBIN"
+  }
+}
+
+variable "avi_pool_opencart" {
+  type = map
+  default = {
+    name = "poolOpencart"
+    lb_algorithm = "LB_ALGORITHM_ROUND_ROBIN"
+    application_persistence_profile_ref = "System-Persistence-Client-IP"
+  }
+}
+
+variable "avi_virtualservice" {
+  default = {
+    http = [
+      {
+        name = "app1"
+        pool_ref = "pool1"
+        cloud_ref = "cloudAzure"
+        services: [
+          {
+            port = 80
+            enable_ssl = "false"
+          },
+          {
+            port = 443
+            enable_ssl = "true"
+          }
+        ]
+      },
+      {
+        name = "app2-scaleSet"
+        pool_ref = "pool2BasedOnAzureScaleSet"
+        cloud_ref = "cloudAzure"
+        services: [
+          {
+            port = 443
+            enable_ssl = "true"
+          }
+        ]
+      },
+      {
+        name = "opencart"
+        pool_ref = "poolOpencart"
+        cloud_ref = "cloudAzure"
+        services: [
+          {
+            port = 80
+            enable_ssl = "false"
+          },
+          {
+            port = 443
+            enable_ssl = "true"
+          }
+        ]
+      }
+    ],
+    dns = [
+      {
+        name = "app3-dns"
+        cloud_ref = "cloudAzure"
+        services: [
+          {
+            port = 53
+          }
+        ]
+      },
+      {
+        name = "app4-gslb"
+        cloud_ref = "cloudAzure"
+        services: [
+          {
+            port = 53
+          }
+        ]
+        se_group_ref: "seGroupGslb"
+      }
+    ]
+  }
+}
 
 variable "domain" {
   type = map
